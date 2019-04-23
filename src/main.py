@@ -152,8 +152,8 @@ def main():
         transforms.Normalize((0.5,), (0.5,)) # normalize
     ]))
 
-    training_dataset.load_images('training/pristine', 'png', 1)
-    training_dataset.load_images('training/fake', 'png', 0)
+    training_dataset.load_images('training/pristine', 'png', 0)
+    training_dataset.load_images('training/fake', 'png', 1)
     training_dataset.shuffle()
 
     # hold out 200 images for the test set
