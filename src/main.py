@@ -4,15 +4,11 @@
     # getting rid of max pooling
 
 import argparse
-import cv2
-import glob
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from torch.utils.data import Dataset
-import torch.optim as optim
-import random
 from torchvision import transforms
+from Net import Net
+from Phase1DataSet import Phase1DataSet
 
 WIDTH = 100
 HEIGHT = 100
@@ -21,63 +17,6 @@ NUMBER_OF_FIRST_CONVOLUTION_OUTPUT_CHANNELS = 20
 NUMBER_OF_SECOND_CONVOLUTION_OUTPUT_CHANNELS = 50
 NUMBER_OF_FULLY_CONNECTED_NODES = 500
 
-# TODO: move to separate file later
-class Phase1DataSet(Dataset):
-    def __init__(self, transform=None):
-        self.transform = transform
-        self.imagePaths = []
-        self.labels = []
-
-    def load_images(self, dir, image_extension, label):
-        examples = glob.glob(F"{dir}/*{image_extension}")
-        examples = [path for path in examples if 'mask' not in path]
-        self.imagePaths.extend(examples)
-        self.labels.extend([label] * len(examples))
-
-    def shuffle(self):
-        combined = list(zip(self.imagePaths, self.labels))
-        random.shuffle(combined)
-        self.imagePaths, self.labels = zip(*combined)
-
-    def __len__(self):
-        return len(self.imagePaths)
-
-    def __getitem__(self, index):
-        return (self.transform(cv2.imread(self.imagePaths[index])), self.labels[index])
-
-class Net(nn.Module):
-    def __init__(self):
-        super(Net, self).__init__()
-        # new_width = (old_width - KERNEL + 2 * PADDING) / STRIDE + 1
-
-        # nn.Conv2d(num of input channels, num of output channels, kernel size - int or tuple, stride)
-        self.conv1 = nn.Conv2d(
-            NUMBER_OF_COLOR_CHANNELS,
-            NUMBER_OF_FIRST_CONVOLUTION_OUTPUT_CHANNELS,
-            kernel_size=(5,5), stride=1, padding=2
-        )
-        self.conv2 = nn.Conv2d(
-            NUMBER_OF_FIRST_CONVOLUTION_OUTPUT_CHANNELS,
-            NUMBER_OF_SECOND_CONVOLUTION_OUTPUT_CHANNELS,
-            kernel_size=(5,5), stride=1, padding=2
-        )
-
-        # nn.Linear(size of input sample, size of output sample)
-        self.fc1 = nn.Linear(
-            int(WIDTH / 4 * HEIGHT / 4 * NUMBER_OF_SECOND_CONVOLUTION_OUTPUT_CHANNELS),
-            NUMBER_OF_FULLY_CONNECTED_NODES
-        )
-        self.fc2 = nn.Linear(NUMBER_OF_FULLY_CONNECTED_NODES, 1)
-
-    def forward(self, x):
-        x = F.relu(self.conv1(x))
-        x = F.max_pool2d(x, kernel_size=(2,2), stride=2)
-        x = F.relu(self.conv2(x))
-        x = F.max_pool2d(x, kernel_size=(2,2), stride=2)
-        x = x.view(-1, int(WIDTH / 4 * HEIGHT / 4 * NUMBER_OF_SECOND_CONVOLUTION_OUTPUT_CHANNELS))
-        x = F.relu(self.fc1(x))
-        x = self.fc2(x)
-        return torch.squeeze(torch.sigmoid(x))
 
 def train(args, model, device, train_loader, optimizer, epoch):
     model.train()
@@ -182,7 +121,7 @@ def main():
         batch_size=args.test_batch_size, **kwargs
     )
 
-    model = Net().to(device)
+    model = Net(WIDTH, HEIGHT,  NUMBER_OF_COLOR_CHANNELS, NUMBER_OF_FIRST_CONVOLUTION_OUTPUT_CHANNELS, NUMBER_OF_SECOND_CONVOLUTION_OUTPUT_CHANNELS, NUMBER_OF_FULLY_CONNECTED_NODES).to(device)
     optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
 
     for epoch in range(1, args.epochs + 1):
