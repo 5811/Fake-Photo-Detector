@@ -6,13 +6,14 @@
 import argparse
 import torch
 import torch.nn as nn
+import torch.optim as optim
 from torchvision import transforms
 from Net import Net
 from Phase1DataSet import Phase1DataSet
 
 WIDTH = 100
 HEIGHT = 100
-NUMBER_OF_COLOR_CHANNELS = 1
+NUMBER_OF_COLOR_CHANNELS = 3
 NUMBER_OF_FIRST_CONVOLUTION_OUTPUT_CHANNELS = 20
 NUMBER_OF_SECOND_CONVOLUTION_OUTPUT_CHANNELS = 50
 NUMBER_OF_FULLY_CONNECTED_NODES = 500
@@ -82,14 +83,16 @@ def main():
 
     kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
 
-    # Build our training set
-    training_dataset = Phase1DataSet(transform=transforms.Compose([
+    transformParameters = transforms.Compose([
         transforms.ToPILImage(),
         transforms.Resize((WIDTH, HEIGHT)), # all images will be resized
-        transforms.Grayscale(), # we only care about one color channel
+        #transforms.Grayscale(), # we only care about one color channel
         transforms.ToTensor(), # conver numpy image to torch image
         transforms.Normalize((0.5,), (0.5,)) # normalize
-    ]))
+    ])
+    
+    # Build our training set
+    training_dataset = Phase1DataSet(transform=transformParameters)
 
     training_dataset.load_images('training/pristine', 'png', 0)
     training_dataset.load_images('training/fake', 'png', 1)
@@ -102,13 +105,7 @@ def main():
     training_dataset.imagePaths = training_dataset.imagePaths[:1300]
     training_dataset.labels = training_dataset.labels[:1300]
 
-    testing_dataset =  Phase1DataSet(transform=transforms.Compose([
-        transforms.ToPILImage(),
-        transforms.Resize((WIDTH, HEIGHT)), # all images will be resized
-        transforms.Grayscale(), # we only care about one color channel
-        transforms.ToTensor(), # conver numpy image to torch image
-        transforms.Normalize((0.5,), (0.5,)) # normalize
-    ]))
+    testing_dataset =  Phase1DataSet(transform=transformParameters)
     testing_dataset.imagePaths = testing_images
     testing_dataset.labels = testing_labels
 
