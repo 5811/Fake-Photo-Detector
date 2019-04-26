@@ -1,6 +1,5 @@
 # variations to try:
     # Naive bayes
-    # getting rid of grayscale
     # getting rid of max pooling
 
 import argparse
@@ -11,8 +10,8 @@ from torchvision import transforms
 from Net import Net
 from Phase1DataSet import Phase1DataSet
 
-WIDTH = 100
-HEIGHT = 100
+WIDTH = 2000
+HEIGHT = 2000
 NUMBER_OF_COLOR_CHANNELS = 3
 NUMBER_OF_FIRST_CONVOLUTION_OUTPUT_CHANNELS = 20
 NUMBER_OF_SECOND_CONVOLUTION_OUTPUT_CHANNELS = 50
@@ -88,7 +87,9 @@ def main():
         transforms.Resize((WIDTH, HEIGHT)), # all images will be resized
         #transforms.Grayscale(), # we only care about one color channel
         transforms.ToTensor(), # conver numpy image to torch image
-        transforms.Normalize((0.5,), (0.5,)) # normalize
+        
+        #compute means and standard deviations of color channels for normalization 
+        transforms.Normalize((127.5, 127.5, 127.5,), (127.5, 127.5, 127.5,)) # normalize
     ])
     
     # Build our training set

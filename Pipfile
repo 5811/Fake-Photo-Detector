@@ -8,6 +8,8 @@ jupyter = "*"
 numpy = "*"
 pillow = "*"
 opencv-python = "*"
+torch = "*"
+torchvision = "*"
 
 [dev-packages]
 
