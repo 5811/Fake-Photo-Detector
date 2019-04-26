@@ -10,8 +10,8 @@ from torchvision import transforms
 from Net import Net
 from Phase1DataSet import Phase1DataSet
 
-WIDTH = 2000
-HEIGHT = 2000
+WIDTH = 100
+HEIGHT = 100
 NUMBER_OF_COLOR_CHANNELS = 3
 NUMBER_OF_FIRST_CONVOLUTION_OUTPUT_CHANNELS = 20
 NUMBER_OF_SECOND_CONVOLUTION_OUTPUT_CHANNELS = 50
@@ -31,7 +31,7 @@ def train(args, model, device, train_loader, optimizer, epoch):
 
         if batch_idx % args.log_interval == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                epoch, batch_idx * len(data), len(train_loader.dataset),
+                epoch, batch_idx * train_loader.batch_size, len(train_loader.dataset),
                 100. * batch_idx / len(train_loader), loss.item()))
 
 def test(args, model, device, test_loader):
