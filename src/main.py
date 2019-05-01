@@ -15,8 +15,15 @@ HEIGHT = 1500
 NUMBER_OF_COLOR_CHANNELS = 3
 NUMBER_OF_FIRST_CONVOLUTION_OUTPUT_CHANNELS = 10
 NUMBER_OF_SECOND_CONVOLUTION_OUTPUT_CHANNELS = 5
-NUMBER_OF_FULLY_CONNECTED_NODES = 500
+NUMBER_OF_FULLY_CONNECTED_NODES = 100
 
+def print_memory_info(device=None):
+    GB = 1_000_000_000
+    if torch.cuda.is_available():
+        print(f'Memory allocated: {torch.cuda.memory_allocated() / GB}')
+        print(f'Max memory allocated: {torch.cuda.max_memory_allocated() / GB}')
+        print(f'Memory cached: {torch.cuda.memory_cached() / GB}')
+        print(f'Max memory cached: {torch.cuda.max_memory_cached() / GB}')
 
 def train(args, model, device, train_loader, optimizer, epoch):
     model.train()
@@ -34,6 +41,7 @@ def train(args, model, device, train_loader, optimizer, epoch):
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, batch_idx * train_loader.batch_size, len(train_loader.dataset),
                 100. * batch_idx / len(train_loader), loss.item()))
+            print_memory_info(device)
 
 def test(args, model, device, test_loader):
     model.eval()
@@ -51,6 +59,7 @@ def test(args, model, device, test_loader):
             num_correct = sum(v1 == v2 for (v1, v2) in zip(prediction, target.int().tolist()))
             total_correct += num_correct
             total_num_tests += len(target)
+            print_memory_info(device)
 
     print(f'Test set: Accuracy: {total_correct / total_num_tests * 100.0}% \n')
 
@@ -59,7 +68,7 @@ def main():
     parser = argparse.ArgumentParser(description='PyTorch Fake Photo Detector Example')
     parser.add_argument('--batch-size', type=int, default=10, metavar='N',
                         help='input batch size for training (default: 64)')
-    parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
+    parser.add_argument('--test-batch-size', type=int, default=10, metavar='N',
                         help='input batch size for testing (default: 1000)')
     parser.add_argument('--epochs', type=int, default=100, metavar='N',
                         help='number of epochs to train (default: 10)')
