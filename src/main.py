@@ -20,11 +20,12 @@ NUMBER_OF_FULLY_CONNECTED_NODES = 500
 
 def train(args, model, device, train_loader, optimizer, epoch):
     model.train()
+    criterion = nn.L1Loss()
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
         output = model(data)
-        criterion = nn.L1Loss()
+        
         loss = criterion(output, target.float())
         loss.backward()
         optimizer.step()
