@@ -10,8 +10,8 @@ from torchvision import transforms
 from Net import Net
 from Phase1DataSet import Phase1DataSet
 
-WIDTH = 100
-HEIGHT = 100
+WIDTH = 1000
+HEIGHT = 1000
 NUMBER_OF_COLOR_CHANNELS = 3
 NUMBER_OF_FIRST_CONVOLUTION_OUTPUT_CHANNELS = 20
 NUMBER_OF_SECOND_CONVOLUTION_OUTPUT_CHANNELS = 50
@@ -57,7 +57,7 @@ def main():
     parser = argparse.ArgumentParser(description='PyTorch Fake Photo Detector Example')
     parser.add_argument('--batch-size', type=int, default=64, metavar='N',
                         help='input batch size for training (default: 64)')
-    parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
+    parser.add_argument('--test-batch-size', type=int, default=20, metavar='N',
                         help='input batch size for testing (default: 1000)')
     parser.add_argument('--epochs', type=int, default=10, metavar='N',
                         help='number of epochs to train (default: 10)')
@@ -96,19 +96,22 @@ def main():
     training_dataset = Phase1DataSet(transform=transformParameters)
 
     training_dataset.load_images('training/pristine', 'png', 0)
+    pristineHoldout = training_dataset.imagePaths[-50:]
+    pristineLabels = training_dataset.labels[-50:]
+    training_dataset.imagePaths = training_dataset.imagePaths[:-50]
+    training_dataset.labels = training_dataset.labels[:-50]
+
     training_dataset.load_images('training/fake', 'png', 1)
+    fakeHoldout = training_dataset.imagePaths[-50:]
+    fakeLabels = training_dataset.labels[-50:]
+    training_dataset.imagePaths = training_dataset.imagePaths[:-50]
+    training_dataset.labels = training_dataset.labels[:-50]
+
     training_dataset.shuffle()
 
-    # hold out 200 images for the test set
-    testing_images = training_dataset.imagePaths[-200:]
-    testing_labels = training_dataset.labels[-200:]
-
-    training_dataset.imagePaths = training_dataset.imagePaths[:1300]
-    training_dataset.labels = training_dataset.labels[:1300]
-
-    testing_dataset =  Phase1DataSet(transform=transformParameters)
-    testing_dataset.imagePaths = testing_images
-    testing_dataset.labels = testing_labels
+    testing_dataset = Phase1DataSet(transform=transformParameters)
+    testing_dataset.imagePaths = [*pristineHoldout, *fakeHoldout]
+    testing_dataset.labels = [*pristineLabels, *fakeLabels]
 
     train_loader = torch.utils.data.DataLoader(
         training_dataset,
