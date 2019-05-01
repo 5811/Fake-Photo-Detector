@@ -10,11 +10,11 @@ from torchvision import transforms
 from Net import Net
 from Phase1DataSet import Phase1DataSet
 
-WIDTH = 1000
-HEIGHT = 1000
+WIDTH = 1500
+HEIGHT = 1500
 NUMBER_OF_COLOR_CHANNELS = 3
-NUMBER_OF_FIRST_CONVOLUTION_OUTPUT_CHANNELS = 20
-NUMBER_OF_SECOND_CONVOLUTION_OUTPUT_CHANNELS = 50
+NUMBER_OF_FIRST_CONVOLUTION_OUTPUT_CHANNELS = 10
+NUMBER_OF_SECOND_CONVOLUTION_OUTPUT_CHANNELS = 5
 NUMBER_OF_FULLY_CONNECTED_NODES = 500
 
 
@@ -42,10 +42,11 @@ def test(args, model, device, test_loader):
         for data, target in test_loader:
             data, target = data.to(device), target.to(device)
             output = model(data)
-            
+
             prediction = [o > 0.5 for o in output.tolist()]
-            num_fake_images = len([p == 0 for p in prediction])
+            num_fake_images = len([p for p in prediction if p == 1])
             print(f"Predicted num fake images: {num_fake_images}")
+
             num_correct = sum(v1 == v2 for (v1, v2) in zip(prediction, target.int().tolist()))
             total_correct += num_correct
             total_num_tests += len(target)
@@ -55,11 +56,11 @@ def test(args, model, device, test_loader):
 def main():
     # Training settings
     parser = argparse.ArgumentParser(description='PyTorch Fake Photo Detector Example')
-    parser.add_argument('--batch-size', type=int, default=64, metavar='N',
+    parser.add_argument('--batch-size', type=int, default=10, metavar='N',
                         help='input batch size for training (default: 64)')
-    parser.add_argument('--test-batch-size', type=int, default=20, metavar='N',
+    parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
                         help='input batch size for testing (default: 1000)')
-    parser.add_argument('--epochs', type=int, default=10, metavar='N',
+    parser.add_argument('--epochs', type=int, default=100, metavar='N',
                         help='number of epochs to train (default: 10)')
     parser.add_argument('--lr', type=float, default=0.01, metavar='LR',
                         help='learning rate (default: 0.01)')
