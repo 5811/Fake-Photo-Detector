@@ -49,21 +49,35 @@ def test(args, model, device, test_loader):
     model.eval()
     total_num_tests = 0
     total_correct = 0
+    total_distance = 0
+
     with torch.no_grad():
         for data, target in test_loader:
             data, target = data.to(device), target.to(device)
             output = model(data)
 
-            prediction = [o > 0.5 for o in output.tolist()]
-            num_fake_images = len([p for p in prediction if p == 1])
+            # compute sum of squared differences from the correct answers
+            diff = sum((t-o)*(t-o) for (t, o) in zip(target.tolist(), output.tolist()))
+            print(f"Batch squared diff: {diff}")
+            total_distance += diff
+            
+            # compute number of incorrect images
+            predictions = [o > 0.5 for o in output.tolist()]
+            num_fake_images = len([p for p in predictions if p == 1])
             print(f"Predicted num fake images: {num_fake_images}")
 
-            num_correct = sum(v1 == v2 for (v1, v2) in zip(prediction, target.int().tolist()))
+            num_correct = sum(v1 == v2 for (v1, v2) in zip(predictions, target.int().tolist()))
             total_correct += num_correct
             total_num_tests += len(target)
+
             print_memory_info(device)
 
-    print(f'Test set: Accuracy: {total_correct / total_num_tests * 100.0}% \n')
+    print('------------------------------------------------------')
+    # Best accuracy: 100, worst accuracy: 0
+    print(f'Test set: Accuracy: {total_correct / total_num_tests * 100.0}%')
+    # Worst distance: 0, best distance: 1
+    print(f'Test set: Normalized squared distance: {total_distance / total_num_tests}')
+    print('------------------------------------------------------')
 
 def main():
     # Training settings
