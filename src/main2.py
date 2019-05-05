@@ -7,15 +7,11 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torchvision import transforms
-from Phase1Net import Net
+from Phase2Net import get_model
 from Phase1DataSet import Phase1DataSet
 
 WIDTH = 1500
 HEIGHT = 1500
-NUMBER_OF_COLOR_CHANNELS = 3
-NUMBER_OF_FIRST_CONVOLUTION_OUTPUT_CHANNELS = 10
-NUMBER_OF_SECOND_CONVOLUTION_OUTPUT_CHANNELS = 5
-NUMBER_OF_FULLY_CONNECTED_NODES = 100
 
 def print_memory_info(device=None):
     GB = 1_000_000_000
@@ -33,7 +29,7 @@ def train(args, model, device, train_loader, optimizer, epoch):
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
-        output = model(data)
+        output = model(data).squeeze()
         
         loss = criterion(output, target.float())
         loss.backward()
@@ -44,6 +40,7 @@ def train(args, model, device, train_loader, optimizer, epoch):
                 epoch, batch_idx * train_loader.batch_size, len(train_loader.dataset),
                 100. * batch_idx / len(train_loader), loss.item()))
             print_memory_info(device)
+            return # TODO:
 
 def test(args, model, device, test_loader):
     model.eval()
@@ -54,7 +51,7 @@ def test(args, model, device, test_loader):
     with torch.no_grad():
         for data, target in test_loader:
             data, target = data.to(device), target.to(device)
-            output = model(data)
+            output = model(data).squeeze()
 
             # compute sum of squared differences from the correct answers
             diff = sum((t-o)*(t-o) for (t, o) in zip(target.tolist(), output.tolist()))
@@ -87,15 +84,15 @@ def main():
     parser.add_argument('--test-batch-size', type=int, default=10, metavar='N',
                         help='input batch size for testing (default: 1000)')
     parser.add_argument('--epochs', type=int, default=100, metavar='N',
-                        help='number of epochs to train (default: 10)')
-    parser.add_argument('--lr', type=float, default=0.01, metavar='LR',
-                        help='learning rate (default: 0.01)')
-    parser.add_argument('--momentum', type=float, default=0.5, metavar='M',
-                        help='SGD momentum (default: 0.5)')
+                        help='number of epochs to train (default: 100)')
+    parser.add_argument('--lr', type=float, default=0.001, metavar='LR',
+                        help='learning rate (default: 0.001)')
+    parser.add_argument('--momentum', type=float, default=0.9, metavar='M',
+                        help='SGD momentum (default: 0.9)')
     parser.add_argument('--no-cuda', action='store_true', default=False,
                         help='disables CUDA training')
     parser.add_argument('--seed', type=int, default=1, metavar='S',
-                        help='random seed (default: 1)')
+                        help='random seed (default: 5)')
     parser.add_argument('--log-interval', type=int, default=10, metavar='N',
                         help='how many batches to wait before logging training status')
     parser.add_argument('--save-model', action='store_true', default=False,
@@ -149,7 +146,8 @@ def main():
         batch_size=args.test_batch_size, **kwargs
     )
 
-    model = Net(WIDTH, HEIGHT, NUMBER_OF_COLOR_CHANNELS, NUMBER_OF_FIRST_CONVOLUTION_OUTPUT_CHANNELS, NUMBER_OF_SECOND_CONVOLUTION_OUTPUT_CHANNELS, NUMBER_OF_FULLY_CONNECTED_NODES).to(device)
+    # https://pytorch.org/tutorials/beginner/transfer_learning_tutorial.html#
+    model = get_model().to(device)
     optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
 
     for epoch in range(1, args.epochs + 1):
