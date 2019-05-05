@@ -10,8 +10,8 @@ from torchvision import transforms
 from Phase2Net import get_model
 from Phase1DataSet import Phase1DataSet
 
-WIDTH = 1500
-HEIGHT = 1500
+WIDTH = 64
+HEIGHT = 64
 
 def print_memory_info(device=None):
     GB = 1_000_000_000
@@ -118,17 +118,17 @@ def main():
     # Build our training set
     training_dataset = Phase1DataSet(transform=transformParameters)
 
-    training_dataset.load_images('training/pristine', 'png', 0)
-    pristineHoldout = training_dataset.imagePaths[-50:]
-    pristineLabels = training_dataset.labels[-50:]
-    training_dataset.imagePaths = training_dataset.imagePaths[:-50]
-    training_dataset.labels = training_dataset.labels[:-50]
+    training_dataset.load_images('training/pristine_patches', 'png', 0)
+    pristineHoldout = training_dataset.imagePaths[-1000:]
+    pristineLabels = training_dataset.labels[-1000:]
+    training_dataset.imagePaths = training_dataset.imagePaths[:-1000]
+    training_dataset.labels = training_dataset.labels[:-1000]
 
-    training_dataset.load_images('training/fake', 'png', 1)
-    fakeHoldout = training_dataset.imagePaths[-50:]
-    fakeLabels = training_dataset.labels[-50:]
-    training_dataset.imagePaths = training_dataset.imagePaths[:-50]
-    training_dataset.labels = training_dataset.labels[:-50]
+    training_dataset.load_images('training/fake_patches', 'png', 1)
+    fakeHoldout = training_dataset.imagePaths[-1000:]
+    fakeLabels = training_dataset.labels[-1000:]
+    training_dataset.imagePaths = training_dataset.imagePaths[:-1000]
+    training_dataset.labels = training_dataset.labels[:-1000]
 
     training_dataset.shuffle()
 
