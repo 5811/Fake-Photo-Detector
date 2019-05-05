@@ -6,9 +6,9 @@ kernel = 64
 stride = int(kernel/2)
 mask_ratio = 0.35
 patch_size = (kernel*kernel)
-fake_patches_output_dir = 'training/fake_patches'
-pristine_patches_output_dir = 'training/pristine_patches'
+
 fake_images_dir = 'training/fake/'
+pristine_images_dir = 'training/pristine'
 
 def num_black_pixels(mask):
     return len([p for p in mask.flatten() if p >= 200])
@@ -31,24 +31,39 @@ def image_to_patch_tuples(image, mask):
                 patches.append(image[x:x+kernel, y:y+kernel])
     return patches
 
-def generate_and_store_patches(image_name):
-    image_path = f'{fake_images_dir}/{image_name}.png'
-    mask_path =  f'{fake_images_dir}/{image_name}.mask.png'
-    patches = image_to_patch_tuples(cv2.imread(image_path), cv2.imread(mask_path))
-    for index, patch in enumerate(patches):
-        cv2.imwrite(f'{fake_patches_output_dir}/{image_name}-patch-{index}.png', patch)
+def generate_and_store_patches(image_name, dir, generate_mask=False):
+    image_path = f'{dir}/{image_name}.png'
+    mask_path =  f'{dir}/{image_name}.mask.png'
 
-def get_fake_image_names():
-    examples = glob.glob(F"{fake_images_dir}/*")
+    image = cv2.imread(image_path)
+    if generate_mask:
+        mask = np.zeros(image)
+    else:
+        mask = cv2.imread(mask_path)
+
+    patches = image_to_patch_tuples(image, mask)
+    for index, patch in enumerate(patches):
+        cv2.imwrite(f'{dir}_patches/{image_name}-patch-{index}.png', patch)
+
+def get_image_names(dir):
+    examples = glob.glob(F"{dir}/*")
     examples = [path for path in examples if 'mask' not in path]
     image_names = [re.search('(\w*).png', example).group(1) for example in examples]
     return image_names
 
 def generate_fake_patches():
-    fake_image_names = get_fake_image_names()
+    fake_image_names = get_image_names(fake_images_dir)
     for index, image_name in enumerate(fake_image_names):
         print(f'Progress: {index / len(fake_image_names) * 100}%')
-        generate_and_store_patches(image_name)
+        generate_and_store_patches(image_name, pristine_images_dir)
+
+def generate_pristine_images():
+    pristine_image_names = get_image_names(pristine_images_dir)
+    for index, image_name in enumerate(pristine_image_names):
+        print(f'Progress: {index / len(pristine_image_names) * 100}%')
+        generate_and_store_patches(image_name, pristine_images_dir, True)
+    import pdb; pdb.set_trace();
 
 if __name__ == '__main__':
-    generate_fake_patches()
+    # generate_fake_patches()
+    generate_pristine_images()

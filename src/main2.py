@@ -40,7 +40,6 @@ def train(args, model, device, train_loader, optimizer, epoch):
                 epoch, batch_idx * train_loader.batch_size, len(train_loader.dataset),
                 100. * batch_idx / len(train_loader), loss.item()))
             print_memory_info(device)
-            return # TODO:
 
 def test(args, model, device, test_loader):
     model.eval()
