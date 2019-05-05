@@ -19,6 +19,7 @@ NUMBER_OF_FULLY_CONNECTED_NODES = 30
 
 def print_memory_info(device=None):
     GB = 1_000_000_000
+    """
     if torch.cuda.is_available():
         print('')
         print(f'Memory allocated: {torch.cuda.memory_allocated() / GB}')
@@ -26,6 +27,7 @@ def print_memory_info(device=None):
         print(f'Memory cached: {torch.cuda.memory_cached() / GB}')
         print(f'Max memory cached: {torch.cuda.max_memory_cached() / GB}')
         print('')
+    """
 
 def train(args, model, device, train_loader, optimizer, epoch):
     model.train()
