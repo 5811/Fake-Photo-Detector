@@ -15,9 +15,9 @@ pristine_images_dir = 'training/pristine'
 def num_black_pixels(mask):
     return len([p for p in mask.flatten() if p >= 200])
 
-def is_random():
+def is_random(image):
     num_patches_per_image = 8
-    return random.uniform(0, 1) < num_patches_per_image / patch_size
+    return random.uniform(0, 1) < num_patches_per_image / (kernel * 10)
 
 def image_to_patch_tuples(image, mask, randomized=False):
     '''
@@ -33,9 +33,10 @@ def image_to_patch_tuples(image, mask, randomized=False):
         for y in range(0, img_height - kernel - 1, stride):
             n_black_pixels = num_black_pixels(mask[x:x+kernel, y:y+kernel, 0])
 
-            override = randomized and is_random()
+            override = randomized and is_random(image)
             if override or (n_black_pixels > patch_size*mask_ratio and n_black_pixels < patch_size*(1-mask_ratio)):
                 patches.append(image[x:x+kernel, y:y+kernel])
+
     return patches
 
 def generate_and_store_patches(image_name, dir, generate_mask=False):
