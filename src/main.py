@@ -10,12 +10,12 @@ from torchvision import transforms
 from Phase1Net import Net
 from Phase1DataSet import Phase1DataSet
 
-WIDTH = 1500
-HEIGHT = 1500
+WIDTH = 64
+HEIGHT = 64
 NUMBER_OF_COLOR_CHANNELS = 3
 NUMBER_OF_FIRST_CONVOLUTION_OUTPUT_CHANNELS = 10
 NUMBER_OF_SECOND_CONVOLUTION_OUTPUT_CHANNELS = 5
-NUMBER_OF_FULLY_CONNECTED_NODES = 100
+NUMBER_OF_FULLY_CONNECTED_NODES = 30
 
 def print_memory_info(device=None):
     GB = 1_000_000_000
@@ -82,7 +82,7 @@ def test(args, model, device, test_loader):
 def main():
     # Training settings
     parser = argparse.ArgumentParser(description='PyTorch Fake Photo Detector Example')
-    parser.add_argument('--batch-size', type=int, default=10, metavar='N',
+    parser.add_argument('--batch-size', type=int, default=1000, metavar='N',
                         help='input batch size for training (default: 64)')
     parser.add_argument('--test-batch-size', type=int, default=10, metavar='N',
                         help='input batch size for testing (default: 1000)')
@@ -122,17 +122,17 @@ def main():
     # Build our training set
     training_dataset = Phase1DataSet(transform=transformParameters)
 
-    training_dataset.load_images('training/pristine', 'png', 0)
-    pristineHoldout = training_dataset.imagePaths[-50:]
-    pristineLabels = training_dataset.labels[-50:]
-    training_dataset.imagePaths = training_dataset.imagePaths[:-50]
-    training_dataset.labels = training_dataset.labels[:-50]
+    training_dataset.load_images('training/pristine_patches', 'png', 0)
+    pristineHoldout = training_dataset.imagePaths[-1000:]
+    pristineLabels = training_dataset.labels[-1000:]
+    training_dataset.imagePaths = training_dataset.imagePaths[:-1000]
+    training_dataset.labels = training_dataset.labels[:-1000]
 
-    training_dataset.load_images('training/fake', 'png', 1)
-    fakeHoldout = training_dataset.imagePaths[-50:]
-    fakeLabels = training_dataset.labels[-50:]
-    training_dataset.imagePaths = training_dataset.imagePaths[:-50]
-    training_dataset.labels = training_dataset.labels[:-50]
+    training_dataset.load_images('training/fake_patches', 'png', 1)
+    fakeHoldout = training_dataset.imagePaths[-1000:]
+    fakeLabels = training_dataset.labels[-1000:]
+    training_dataset.imagePaths = training_dataset.imagePaths[:-1000]
+    training_dataset.labels = training_dataset.labels[:-1000]
 
     training_dataset.shuffle()
 
