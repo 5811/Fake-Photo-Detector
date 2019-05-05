@@ -1,6 +1,8 @@
 import cv2
 import glob
 import re
+import random
+import numpy as np
 
 kernel = 64
 stride = int(kernel/2)
@@ -13,7 +15,11 @@ pristine_images_dir = 'training/pristine'
 def num_black_pixels(mask):
     return len([p for p in mask.flatten() if p >= 200])
 
-def image_to_patch_tuples(image, mask):
+def is_random():
+    num_patches_per_image = 8
+    return random.uniform(0, 1) < num_patches_per_image / patch_size
+
+def image_to_patch_tuples(image, mask, randomized=False):
     '''
     Takes an image as input.
     Sample 64x64 patches along the image.
@@ -26,8 +32,9 @@ def image_to_patch_tuples(image, mask):
     for x in range(0, img_width - kernel - 1, stride):
         for y in range(0, img_height - kernel - 1, stride):
             n_black_pixels = num_black_pixels(mask[x:x+kernel, y:y+kernel, 0])
-            if n_black_pixels > patch_size*mask_ratio and\
-                n_black_pixels < patch_size*(1-mask_ratio):
+
+            override = randomized and is_random()
+            if override or (n_black_pixels > patch_size*mask_ratio and n_black_pixels < patch_size*(1-mask_ratio)):
                 patches.append(image[x:x+kernel, y:y+kernel])
     return patches
 
@@ -37,11 +44,12 @@ def generate_and_store_patches(image_name, dir, generate_mask=False):
 
     image = cv2.imread(image_path)
     if generate_mask:
-        mask = np.zeros(image)
+        mask = np.zeros(shape=image.shape)
+        patches = image_to_patch_tuples(image, mask, True)
     else:
         mask = cv2.imread(mask_path)
-
-    patches = image_to_patch_tuples(image, mask)
+        patches = image_to_patch_tuples(image, mask)
+    
     for index, patch in enumerate(patches):
         cv2.imwrite(f'{dir}_patches/{image_name}-patch-{index}.png', patch)
 
@@ -62,7 +70,6 @@ def generate_pristine_images():
     for index, image_name in enumerate(pristine_image_names):
         print(f'Progress: {index / len(pristine_image_names) * 100}%')
         generate_and_store_patches(image_name, pristine_images_dir, True)
-    import pdb; pdb.set_trace();
 
 if __name__ == '__main__':
     # generate_fake_patches()
