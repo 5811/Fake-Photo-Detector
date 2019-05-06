@@ -4,7 +4,7 @@ import random
 import cv2
 
 
-class Phase1DataSet(Dataset):
+class ImageDatasetAdaptor(Dataset):
     def __init__(self, transform=None):
         self.transform = transform
         self.imagePaths = []

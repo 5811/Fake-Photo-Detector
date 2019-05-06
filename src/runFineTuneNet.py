@@ -7,27 +7,21 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torchvision import transforms
-from Phase1Net import Net
-from Phase1DataSet import Phase1DataSet
+from FIneTunedModel import get_model
+from ImageDatasetAdaptor import ImageDatasetAdaptor
 
 WIDTH = 64
 HEIGHT = 64
-NUMBER_OF_COLOR_CHANNELS = 3
-NUMBER_OF_FIRST_CONVOLUTION_OUTPUT_CHANNELS = 10
-NUMBER_OF_SECOND_CONVOLUTION_OUTPUT_CHANNELS = 5
-NUMBER_OF_FULLY_CONNECTED_NODES = 30
 
 def print_memory_info(device=None):
     GB = 1_000_000_000
-    """
-    if torch.cuda.is_available():
-        print('')
-        print(f'Memory allocated: {torch.cuda.memory_allocated() / GB}')
-        print(f'Max memory allocated: {torch.cuda.max_memory_allocated() / GB}')
-        print(f'Memory cached: {torch.cuda.memory_cached() / GB}')
-        print(f'Max memory cached: {torch.cuda.max_memory_cached() / GB}')
-        print('')
-    """
+    # if torch.cuda.is_available():
+    #     print('')
+    #     print(f'Memory allocated: {torch.cuda.memory_allocated() / GB}')
+    #     print(f'Max memory allocated: {torch.cuda.max_memory_allocated() / GB}')
+    #     print(f'Memory cached: {torch.cuda.memory_cached() / GB}')
+    #     print(f'Max memory cached: {torch.cuda.max_memory_cached() / GB}')
+    #     print('')
 
 def train(args, model, device, train_loader, optimizer, epoch):
     model.train()
@@ -35,7 +29,7 @@ def train(args, model, device, train_loader, optimizer, epoch):
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
-        output = model(data)
+        output = model(data).squeeze()
         
         loss = criterion(output, target.float())
         loss.backward()
@@ -56,7 +50,7 @@ def test(args, model, device, test_loader):
     with torch.no_grad():
         for data, target in test_loader:
             data, target = data.to(device), target.to(device)
-            output = model(data)
+            output = model(data).squeeze()
 
             # compute sum of squared differences from the correct answers
             diff = sum((t-o)*(t-o) for (t, o) in zip(target.tolist(), output.tolist()))
@@ -70,7 +64,7 @@ def test(args, model, device, test_loader):
 
             num_correct = sum(v1 == v2 for (v1, v2) in zip(predictions, target.int().tolist()))
             total_correct += num_correct
-            total_num_tests += len(target)
+            total_num_tests += len(target.tolist())
 
             print_memory_info(device)
 
@@ -84,20 +78,20 @@ def test(args, model, device, test_loader):
 def main():
     # Training settings
     parser = argparse.ArgumentParser(description='PyTorch Fake Photo Detector Example')
-    parser.add_argument('--batch-size', type=int, default=1000, metavar='N',
+    parser.add_argument('--batch-size', type=int, default=100, metavar='N',
                         help='input batch size for training (default: 64)')
-    parser.add_argument('--test-batch-size', type=int, default=10, metavar='N',
+    parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
                         help='input batch size for testing (default: 1000)')
     parser.add_argument('--epochs', type=int, default=100, metavar='N',
-                        help='number of epochs to train (default: 10)')
+                        help='number of epochs to train (default: 100)')
     parser.add_argument('--lr', type=float, default=0.01, metavar='LR',
                         help='learning rate (default: 0.01)')
-    parser.add_argument('--momentum', type=float, default=0.5, metavar='M',
-                        help='SGD momentum (default: 0.5)')
+    parser.add_argument('--momentum', type=float, default=0.9, metavar='M',
+                        help='SGD momentum (default: 0.9)')
     parser.add_argument('--no-cuda', action='store_true', default=False,
                         help='disables CUDA training')
     parser.add_argument('--seed', type=int, default=1, metavar='S',
-                        help='random seed (default: 1)')
+                        help='random seed (default: 5)')
     parser.add_argument('--log-interval', type=int, default=10, metavar='N',
                         help='how many batches to wait before logging training status')
     parser.add_argument('--save-model', action='store_true', default=False,
@@ -118,11 +112,11 @@ def main():
         transforms.ToTensor(), # conver numpy image to torch image
         
         #compute means and standard deviations of color channels for normalization 
-        transforms.Normalize((127.5, 127.5, 127.5,), (127.5, 127.5, 127.5,)) # normalize
+        transforms.Normalize((0.5, 0.5, 0.5,), (0.5, 0.5, 0.5,)) # normalize
     ])
     
     # Build our training set
-    training_dataset = Phase1DataSet(transform=transformParameters)
+    training_dataset = ImageDatasetAdaptor(transform=transformParameters)
 
     training_dataset.load_images('training/pristine_patches', 'png', 0)
     pristineHoldout = training_dataset.imagePaths[-1000:]
@@ -138,7 +132,7 @@ def main():
 
     training_dataset.shuffle()
 
-    testing_dataset = Phase1DataSet(transform=transformParameters)
+    testing_dataset = ImageDatasetAdaptor(transform=transformParameters)
     testing_dataset.imagePaths = [*pristineHoldout, *fakeHoldout]
     testing_dataset.labels = [*pristineLabels, *fakeLabels]
 
@@ -151,12 +145,16 @@ def main():
         batch_size=args.test_batch_size, **kwargs
     )
 
-    model = Net(WIDTH, HEIGHT, NUMBER_OF_COLOR_CHANNELS, NUMBER_OF_FIRST_CONVOLUTION_OUTPUT_CHANNELS, NUMBER_OF_SECOND_CONVOLUTION_OUTPUT_CHANNELS, NUMBER_OF_FULLY_CONNECTED_NODES).to(device)
+    # https://pytorch.org/tutorials/beginner/transfer_learning_tutorial.html#
+    model = get_model().to(device)
     optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
+    # decay learning rate every 7 epochs
+    exp_lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.03)
 
     for epoch in range(1, args.epochs + 1):
         train(args, model, device, train_loader, optimizer, epoch)
         test(args, model, device, test_loader)
+        exp_lr_scheduler.step()
 
     if (args.save_model):
         torch.save(model.state_dict(),"fake_photo_detector_cnn.pt")

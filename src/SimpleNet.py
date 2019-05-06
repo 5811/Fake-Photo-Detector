@@ -2,9 +2,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-class Net(nn.Module):
+class SimpleNet(nn.Module):
     def __init__(self, width, height, number_of_color_channels, number_of_first_convolution_output_channels, number_of_second_convolution_output_channels, number_of_fully_connected_nodes):
-        super(Net, self).__init__()
+        super(SimpleNet, self).__init__()
         # new_width = (old_width - KERNEL + 2 * PADDING) / STRIDE + 1
         self.width=width
         self.height=height
