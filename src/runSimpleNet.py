@@ -155,7 +155,7 @@ def main():
         test(args, model, device, test_loader)
 
     if (args.save_model):
-        torch.save(model.state_dict(),"fake_photo_detector_cnn.pt")
+        torch.save(model.state_dict(),"simple_net.pt")
 
 if __name__ == '__main__':
     main()

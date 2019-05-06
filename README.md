@@ -8,18 +8,8 @@ With systems like OpenAI’s GPT-2 on the rise, malicious agents now have a very
 ## Dataset
 We will be using the first phase training data-set of the [IEEE IFS-TC Image Forensics Challenge](http://ifc.recod.ic.unicamp.br/fc.website/index.py?sec=5).
 
-## Technical Details
-
-### First Attempt
-__TODO:__
-- CNN (3 channels in, ---) Layer with Relu
-- Maxpool
-- CNN with Relu
-- Batch Normalization
-- Maxpool
-- Fully Connected Layer
-- Batch Normalization
-- Sigmoid
+## Technical Details and Results
+Check [report](https://docs.google.com/document/d/1rAeZKBjortFTPw4UEXXuXP_snXpMTjGE7pTO2fM0WoM/edit?usp=sharing).
 
 ## Acknowledgements
 Thank you to TACC and Dr. Scott Nikeum at UT Austin for giving us access to compute resources.

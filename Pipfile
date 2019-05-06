@@ -10,6 +10,7 @@ pillow = "*"
 opencv-python = "*"
 torch = "*"
 torchvision = "*"
+matplotlib = "*"
 
 [dev-packages]
 
