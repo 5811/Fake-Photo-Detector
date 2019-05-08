@@ -13,3 +13,22 @@ Check [report](https://docs.google.com/document/d/1rAeZKBjortFTPw4UEXXuXP_snXpMT
 
 ## Acknowledgements
 Thank you to TACC and Dr. Scott Nikeum at UT Austin for giving us access to compute resources.
+
+## How to run the code
+* Install pipenv for python: `pip install pipenv` or `pip3 install pipenv`.
+* CD into project directory (the directory where this README is located).
+* Activte environment: `pipenv shell`
+* Setup: `pipenv intall`
+* Download dataset from the IEEE website linked above. Structure it like so (note that the last two directories--`fake_patches` and `pristine_patches`--are empty directories.):
+    * ProjectRoot
+        * \training
+            * \fake
+                 * 231239912adbbas.png # put fake images (and there masks) here
+            * \pristine
+                 * 12kkfjksdfj.png # put pristine images here
+            * \fake_patches
+            * \pristine_patches
+* Run either SimpleNet for a finetuned model by running `python src/runSimpleNet.py` or `python src/runFineTune.py`
+    * If you want to control whether we fine-tune the VGG or Resnet, modify `src/FineTunedModel.py`.
+
+
